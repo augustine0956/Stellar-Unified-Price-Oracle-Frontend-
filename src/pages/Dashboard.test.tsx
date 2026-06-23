@@ -3,6 +3,7 @@ import { cleanup, render, screen, waitFor, fireEvent } from '@testing-library/re
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { Dashboard } from './Dashboard'
+import { AlertsProvider } from '../hooks/useAlerts'
 
 vi.mock('@tanstack/react-virtual', () => ({
   useVirtualizer: ({ count, estimateSize }: { count: number; estimateSize: (i: number) => number }) => {
@@ -17,6 +18,18 @@ vi.mock('@tanstack/react-virtual', () => ({
       measure: () => {},
     }
   },
+}))
+
+vi.mock('../preferences/PreferencesContext', () => ({
+  usePreferences: vi.fn(() => ({
+    preferences: { refreshInterval: 10000, chartTimeRange: '24h', staleThresholdMinutes: 5, dashboardView: 'card', cardOrder: [] },
+    updatePreference: vi.fn(),
+    undo: vi.fn(),
+    redo: vi.fn(),
+    canUndo: false,
+    canRedo: false,
+    clearHistory: vi.fn(),
+  })),
 }))
 
 afterEach(cleanup)
@@ -35,9 +48,10 @@ vi.mock('../context/PriceContext', () => ({
   })),
 }))
 
+const FIXED_NOW = 1700100000000
 const mockPrices = [
-  { assetPair: 'BTC/USD', price: 50000, timestamp: Date.now(), confidence: 0.99, sources: ['chainlink'] },
-  { assetPair: 'ETH/USD', price: 3000, timestamp: Date.now(), confidence: 0.95, sources: ['redstone'] },
+  { assetPair: 'BTC/USD', price: 50000, timestamp: FIXED_NOW - 60000, confidence: 0.99, sources: ['chainlink'] },
+  { assetPair: 'ETH/USD', price: 3000, timestamp: FIXED_NOW - 120000, confidence: 0.95, sources: ['redstone'] },
 ]
 
 describe('Dashboard', () => {
@@ -49,7 +63,9 @@ describe('Dashboard', () => {
   it('renders the title', () => {
     render(
       <MemoryRouter>
-        <Dashboard />
+        <AlertsProvider>
+          <Dashboard />
+        </AlertsProvider>
       </MemoryRouter>,
     )
     expect(screen.getByText('Price Oracle Dashboard')).toBeInTheDocument()
@@ -58,7 +74,9 @@ describe('Dashboard', () => {
   it('shows loading skeletons when loading and no prices', () => {
     render(
       <MemoryRouter>
-        <Dashboard />
+        <AlertsProvider>
+          <Dashboard />
+        </AlertsProvider>
       </MemoryRouter>,
     )
     expect(document.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0)
@@ -79,7 +97,9 @@ describe('Dashboard', () => {
     })
     render(
       <MemoryRouter>
-        <Dashboard />
+        <AlertsProvider>
+          <Dashboard />
+        </AlertsProvider>
       </MemoryRouter>,
     )
     expect(screen.getByText('Something broke')).toBeInTheDocument()
@@ -100,7 +120,9 @@ describe('Dashboard', () => {
     })
     render(
       <MemoryRouter>
-        <Dashboard />
+        <AlertsProvider>
+          <Dashboard />
+        </AlertsProvider>
       </MemoryRouter>,
     )
     const emptyTexts = screen.getAllByText('No price feeds available')
@@ -122,7 +144,9 @@ describe('Dashboard', () => {
     })
     render(
       <MemoryRouter>
-        <Dashboard />
+        <AlertsProvider>
+          <Dashboard />
+        </AlertsProvider>
       </MemoryRouter>,
     )
     expect(screen.getAllByText('BTC/USD').length).toBeGreaterThanOrEqual(1)
@@ -145,7 +169,9 @@ describe('Dashboard', () => {
     const user = userEvent.setup()
     render(
       <MemoryRouter>
-        <Dashboard />
+        <AlertsProvider>
+          <Dashboard />
+        </AlertsProvider>
       </MemoryRouter>,
     )
     await user.click(screen.getByLabelText('Set alert for BTC/USD'))
@@ -169,7 +195,9 @@ describe('Dashboard', () => {
     const user = userEvent.setup()
     render(
       <MemoryRouter>
-        <Dashboard />
+        <AlertsProvider>
+          <Dashboard />
+        </AlertsProvider>
       </MemoryRouter>,
     )
     await user.click(screen.getByLabelText('Set alert for BTC/USD'))
@@ -195,7 +223,9 @@ describe('Dashboard', () => {
     })
     render(
       <MemoryRouter>
-        <Dashboard />
+        <AlertsProvider>
+          <Dashboard />
+        </AlertsProvider>
       </MemoryRouter>,
     )
     expect(screen.getByPlaceholderText('Search by asset pair...')).toBeInTheDocument()
@@ -217,7 +247,9 @@ describe('Dashboard', () => {
     const user = userEvent.setup()
     render(
       <MemoryRouter>
-        <Dashboard />
+        <AlertsProvider>
+          <Dashboard />
+        </AlertsProvider>
       </MemoryRouter>,
     )
 
@@ -244,7 +276,9 @@ describe('Dashboard', () => {
     const user = userEvent.setup()
     render(
       <MemoryRouter>
-        <Dashboard />
+        <AlertsProvider>
+          <Dashboard />
+        </AlertsProvider>
       </MemoryRouter>,
     )
 
@@ -271,7 +305,9 @@ describe('Dashboard', () => {
     })
     render(
       <MemoryRouter>
-        <Dashboard />
+        <AlertsProvider>
+          <Dashboard />
+        </AlertsProvider>
       </MemoryRouter>,
     )
     expect(screen.queryByPlaceholderText('Search by asset pair...')).not.toBeInTheDocument()
@@ -293,7 +329,9 @@ describe('Dashboard', () => {
     const user = userEvent.setup()
     render(
       <MemoryRouter>
-        <Dashboard />
+        <AlertsProvider>
+          <Dashboard />
+        </AlertsProvider>
       </MemoryRouter>,
     )
 
@@ -326,7 +364,9 @@ describe('Dashboard', () => {
     })
     render(
       <MemoryRouter initialEntries={['/?search=btc']}>
-        <Dashboard />
+        <AlertsProvider>
+          <Dashboard />
+        </AlertsProvider>
       </MemoryRouter>,
     )
     expect(screen.getByText('BTC/USD')).toBeInTheDocument()
@@ -352,7 +392,9 @@ describe('Dashboard', () => {
     })
     render(
       <MemoryRouter initialEntries={['/?confidence=high']}>
-        <Dashboard />
+        <AlertsProvider>
+          <Dashboard />
+        </AlertsProvider>
       </MemoryRouter>,
     )
     expect(screen.getByText('BTC/USD')).toBeInTheDocument()
@@ -374,7 +416,9 @@ describe('Dashboard', () => {
     })
     render(
       <MemoryRouter initialEntries={['/?source=chainlink']}>
-        <Dashboard />
+        <AlertsProvider>
+          <Dashboard />
+        </AlertsProvider>
       </MemoryRouter>,
     )
     expect(screen.getByText('BTC/USD')).toBeInTheDocument()
@@ -396,7 +440,9 @@ describe('Dashboard', () => {
     })
     render(
       <MemoryRouter initialEntries={['/?sort=price-high']}>
-        <Dashboard />
+        <AlertsProvider>
+          <Dashboard />
+        </AlertsProvider>
       </MemoryRouter>,
     )
     expect(screen.getByText('BTC/USD')).toBeInTheDocument()
@@ -423,7 +469,9 @@ describe('Dashboard', () => {
     })
     render(
       <MemoryRouter initialEntries={['/?source=chainlink&confidence=high&sort=price-low']}>
-        <Dashboard />
+        <AlertsProvider>
+          <Dashboard />
+        </AlertsProvider>
       </MemoryRouter>,
     )
     expect(screen.getByText('ETH/USD')).toBeInTheDocument()
@@ -433,10 +481,30 @@ describe('Dashboard', () => {
 })
 
 describe('snapshots', () => {
+  beforeEach(async () => {
+    vi.spyOn(Date, 'now').mockReturnValue(1700100000000)
+    const { usePriceContext } = await import('../context/PriceContext')
+    vi.mocked(usePriceContext).mockReturnValue({
+      prices: [],
+      pricesLoading: true,
+      pricesError: null,
+      pricesValidating: false,
+      livePrices: new Map(),
+      wsStatus: 'disconnected',
+      refetchPrices: vi.fn(),
+      subscribe: vi.fn(),
+      unsubscribe: vi.fn(),
+    })
+  })
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
   it('loading', () => {
     const { container } = render(
       <MemoryRouter>
-        <Dashboard />
+        <AlertsProvider>
+          <Dashboard />
+        </AlertsProvider>
       </MemoryRouter>,
     )
     expect(container.firstChild).toMatchSnapshot()
@@ -457,7 +525,9 @@ describe('snapshots', () => {
     })
     const { container } = render(
       <MemoryRouter>
-        <Dashboard />
+        <AlertsProvider>
+          <Dashboard />
+        </AlertsProvider>
       </MemoryRouter>,
     )
     expect(container.firstChild).toMatchSnapshot()
@@ -478,7 +548,9 @@ describe('snapshots', () => {
     })
     const { container } = render(
       <MemoryRouter>
-        <Dashboard />
+        <AlertsProvider>
+          <Dashboard />
+        </AlertsProvider>
       </MemoryRouter>,
     )
     expect(container.firstChild).toMatchSnapshot()
@@ -499,7 +571,9 @@ describe('snapshots', () => {
     })
     const { container } = render(
       <MemoryRouter>
-        <Dashboard />
+        <AlertsProvider>
+          <Dashboard />
+        </AlertsProvider>
       </MemoryRouter>,
     )
     expect(container.firstChild).toMatchSnapshot()

@@ -83,6 +83,8 @@ describe('PreferencesProvider / usePreferences', () => {
       refreshInterval: 5000,
       chartTimeRange: '7d',
       staleThresholdMinutes: 15,
+      dashboardView: 'card',
+      cardOrder: [],
     })
 
     act(() => result.current.undo())

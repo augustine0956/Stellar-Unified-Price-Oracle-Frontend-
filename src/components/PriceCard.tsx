@@ -1,14 +1,20 @@
 import { memo } from 'react'
 import type { PriceData, PriceHistoryEntry } from '../types'
 import { formatPrice, timeAgo } from '../utils/format'
-import { Sparkline } from './Sparkline'
-import { useSparkline } from '../hooks/useSparkline'
-
 const SOURCE_COLORS: Record<string, string> = {
   chainlink: 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30',
   redstone: 'bg-red-500/20 text-red-600 dark:text-red-400 border-red-500/30',
   band: 'bg-purple-500/20 text-purple-600 dark:text-purple-400 border-purple-500/30',
   reflector: 'bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border-cyan-500/30',
+}
+
+interface DragHandleProps {
+  draggable?: boolean
+  onDragStart?: () => void
+  onDragOver?: (e: React.DragEvent) => void
+  onDrop?: () => void
+  onDragEnd?: () => void
+  onKeyDown?: (e: React.KeyboardEvent) => void
 }
 
 interface PriceCardProps {
@@ -18,20 +24,11 @@ interface PriceCardProps {
   isStale?: boolean
   hasAlert?: boolean
   onAlertClick?: (e: React.MouseEvent) => void
-  /** Optional pre-fetched history for sparkline; if omitted the card fetches it itself */
-  history?: PriceHistoryEntry[]
+  dragHandleProps?: DragHandleProps
+  isDragOver?: boolean
 }
 
-/** Inner card that receives history directly (no fetch, safe for tests) */
-const PriceCardInner = memo(function PriceCardInner({
-  price,
-  onClick,
-  isLive,
-  isStale,
-  hasAlert,
-  onAlertClick,
-  history = [],
-}: PriceCardProps & { history: PriceHistoryEntry[] }) {
+export const PriceCard = memo(function PriceCard({ price, onClick, isLive, isStale, hasAlert, onAlertClick, dragHandleProps, isDragOver }: PriceCardProps) {
   const confidencePct = (price.confidence * 100).toFixed(1)
 
   return (
@@ -45,11 +42,32 @@ const PriceCardInner = memo(function PriceCardInner({
       }}
       role="button"
       tabIndex={0}
-      className={`w-full text-left bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-gray-700 hover:bg-gray-900/80 transition-all shadow-lg shadow-black/20 cursor-pointer ${isStale ? 'opacity-60' : ''}`}
+      className={`w-full text-left bg-gray-900 border rounded-xl p-5 hover:border-gray-700 hover:bg-gray-900/80 transition-all shadow-lg shadow-black/20 cursor-pointer ${isStale ? 'opacity-60' : ''} ${isDragOver ? 'border-cyan-500 ring-1 ring-cyan-500/40' : 'border-gray-800'}`}
       aria-label={`View details for ${price.assetPair}`}
     >
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-semibold text-gray-100">{price.assetPair}</h3>
+        <div className="flex items-center gap-2">
+          {dragHandleProps && (
+            <button
+              type="button"
+              aria-label={`Drag handle for ${price.assetPair}`}
+              tabIndex={0}
+              className="cursor-grab text-gray-600 hover:text-gray-400 touch-none"
+              onClick={(e) => e.stopPropagation()}
+              {...dragHandleProps}
+            >
+              <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                <circle cx="5" cy="4" r="1.2" />
+                <circle cx="5" cy="8" r="1.2" />
+                <circle cx="5" cy="12" r="1.2" />
+                <circle cx="11" cy="4" r="1.2" />
+                <circle cx="11" cy="8" r="1.2" />
+                <circle cx="11" cy="12" r="1.2" />
+              </svg>
+            </button>
+          )}
+          <h3 className="text-lg font-semibold text-gray-100">{price.assetPair}</h3>
+        </div>
         <div className="flex items-center gap-2">
           {hasAlert && (
             <span

@@ -172,55 +172,31 @@ export function FilterBar() {
     rawSearch || confidence !== 'all' || source !== 'all' || sort
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 mb-6 shadow-lg shadow-black/20">
-      {/* Active operator pills */}
-      {operatorTokens.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-3" role="group" aria-label="Active search filters">
-          {operatorTokens.map((token) => (
-            <span
-              key={token}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-cyan-900/40 text-cyan-300 border border-cyan-700/50"
-            >
-              {token}
-              <button
-                type="button"
-                onClick={() => handleRemoveToken(token)}
-                className="hover:text-white transition-colors ml-0.5"
-                aria-label={`Remove filter ${token}`}
-              >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
-
-      <div className="flex flex-col md:flex-row gap-4 items-end md:items-center">
-        {/* Search input with autocomplete */}
-        <div className="flex-1 w-full relative">
-          <label htmlFor="search" className="block text-sm font-medium text-gray-400 mb-1.5">
-            Search Asset Pair
-          </label>
-          <p className="text-xs text-gray-600 mb-1.5 -mt-1">
-            supports source:chainlink confidence:&gt;95 price:&lt;1000 updated:&lt;5m
-          </p>
-          <div className="relative">
-            <input
-              id="search"
-              ref={inputRef}
-              type="text"
-              value={inputValue}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              onBlur={() => setTimeout(() => setSuggestions([]), 150)}
-              placeholder="Search by asset pair..."
-              className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-colors pl-10"
-              aria-autocomplete="list"
-              aria-controls={suggestions.length > 0 ? listboxId : undefined}
-              aria-activedescendant={activeSuggestion >= 0 ? `suggestion-${activeSuggestion}` : undefined}
-              autoComplete="off"
+    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 mb-6 shadow-lg shadow-black/20 flex flex-col md:flex-row gap-4 items-end md:items-center">
+      <div className="flex-1 w-full relative">
+        <label htmlFor="search" className="block text-sm font-medium text-gray-400 mb-1.5">
+          Search Asset Pair
+        </label>
+        <div className="relative">
+          <input
+            id="search"
+            type="text"
+            value={search}
+            onChange={handleSearchChange}
+            placeholder="Search by asset pair..."
+            className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-colors pl-10"
+          />
+          <svg
+            className="absolute left-3 top-2.5 h-5 w-5 text-gray-500"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
             />
             <svg
               className="absolute left-3 top-2.5 h-5 w-5 text-gray-500"

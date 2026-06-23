@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { usePriceContext } from '../context/PriceContext'
 import { useAlerts } from '../hooks/useAlerts'
 import { PriceCard } from '../components/PriceCard'
@@ -8,6 +8,7 @@ import { AlertModal } from '../components/AlertModal'
 import { AlertBadge } from '../components/AlertBadge'
 import { ConnectionBadge } from '../components/ConnectionBadge'
 import { NetworkStatusBanner } from '../components/NetworkStatusBanner'
+import { FilterBar } from '../components/FilterBar'
 import type { AlertFormData } from '../types'
 
 function mergePrices(
@@ -27,19 +28,50 @@ export function Dashboard() {
   const { prices, pricesLoading, pricesError, pricesValidating, livePrices, wsStatus } = usePriceContext()
   const navigate = useNavigate()
   const { alerts, addAlert, removeAlert, hasAlertsForPair, activeCount } = useAlerts()
+  const [searchParams] = useSearchParams()
 
   const [modalOpen, setModalOpen] = useState(false)
   const [modalPair, setModalPair] = useState('')
-  const [searchQuery, setSearchQuery] = useState('')
+
+  const search = searchParams.get('search') || ''
+  const confidence = searchParams.get('confidence') || 'all'
+  const source = searchParams.get('source') || 'all'
+  const sort = searchParams.get('sort') || ''
 
   const merged = mergePrices(prices, livePrices)
-  const filtered = useMemo(
-    () =>
-      searchQuery
-        ? merged.filter((p) => p.assetPair.toLowerCase().includes(searchQuery.toLowerCase()))
-        : merged,
-    [merged, searchQuery],
-  )
+  const filtered = useMemo(() => {
+    let result = merged
+
+    // Search filter
+    if (search) {
+      result = result.filter((p) => p.assetPair.toLowerCase().includes(search.toLowerCase()))
+    }
+
+    // Confidence filter
+    if (confidence === 'high') {
+      result = result.filter((p) => p.confidence > 80)
+    } else if (confidence === 'medium') {
+      result = result.filter((p) => p.confidence > 50)
+    }
+
+    // Source filter
+    if (source !== 'all') {
+      result = result.filter((p) => p.sources.some((s) => s.toLowerCase() === source.toLowerCase()))
+    }
+
+    // Sort
+    if (sort === 'price-high') {
+      result = [...result].sort((a, b) => b.price - a.price)
+    } else if (sort === 'price-low') {
+      result = [...result].sort((a, b) => a.price - b.price)
+    } else if (sort === 'confidence') {
+      result = [...result].sort((a, b) => b.confidence - a.confidence)
+    } else if (sort === 'recent') {
+      result = [...result].sort((a, b) => b.timestamp - a.timestamp)
+    }
+
+    return result
+  }, [merged, search, confidence, source, sort])
 
   const handleCardClick = useCallback(
     (pair: string) => navigate(`/price/${encodeURIComponent(pair)}`),
@@ -90,18 +122,7 @@ export function Dashboard() {
         </div>
       )}
 
-      {!pricesLoading && prices.length > 0 && (
-        <div className="mb-6">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by asset pair..."
-            aria-label="Search price feeds"
-            className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-colors"
-          />
-        </div>
-      )}
+      {!pricesLoading && prices.length > 0 && <FilterBar />}
 
       {pricesLoading && prices.length === 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" aria-label="Loading price cards">
@@ -134,7 +155,7 @@ export function Dashboard() {
 
       {!pricesLoading && merged.length > 0 && filtered.length === 0 && (
         <div className="text-center py-16 text-gray-500">
-          <p className="text-lg mb-2">No results for "{searchQuery}"</p>
+          <p className="text-lg mb-2">No results for "{search}"</p>
           <p className="text-sm">Try a different search term.</p>
         </div>
       )}

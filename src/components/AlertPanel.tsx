@@ -1,14 +1,25 @@
-import { usePriceAlerts } from '../hooks/usePriceAlerts'
+import { useAlerts } from '../hooks/useAlerts'
 import { formatPrice } from '../utils/format'
 
 export function AlertPanel() {
-  const { alerts, removeAlert, toggleAlert, markAsRead, isPanelOpen, togglePanel } = usePriceAlerts()
+  const { alerts, removeAlert, updateAlert, markAsRead, isPanelOpen, togglePanel } = useAlerts()
 
   if (!isPanelOpen) return null
 
-  const activeAlerts = alerts.filter(a => a.active && !a.triggeredAt)
-  const triggeredAlerts = alerts.filter(a => a.triggeredAt)
-  const inactiveAlerts = alerts.filter(a => !a.active && !a.triggeredAt)
+  const activeAlerts = alerts.filter((a) => a.active && a.lastTriggeredAt === null)
+  const triggeredAlerts = alerts.filter((a) => a.lastTriggeredAt !== null)
+  const inactiveAlerts = alerts.filter((a) => !a.active && a.lastTriggeredAt === null)
+
+  const getConditionText = (upper: number | null, lower: number | null) => {
+    if (upper !== null && lower !== null) return `Between $${formatPrice(lower)} and $${formatPrice(upper)}`
+    if (upper !== null) return `↑ Above $${formatPrice(upper)}`
+    if (lower !== null) return `↓ Below $${formatPrice(lower)}`
+    return 'No threshold'
+  }
+
+  const toggleAlert = (id: string, currentActive: boolean) => {
+    updateAlert(id, { active: !currentActive })
+  }
 
   return (
     <>
@@ -56,11 +67,14 @@ export function AlertPanel() {
                           <span className="text-xs text-gray-400">Just now</span>
                         </div>
                         <p className="text-sm text-gray-300 mb-3">
-                          Price went {alert.condition} <span className="font-mono">${formatPrice(alert.targetPrice)}</span>
+                          Price crossed <span className="font-mono">{getConditionText(alert.upperThreshold, alert.lowerThreshold)}</span>
                         </p>
                         <div className="flex gap-2">
                           <button
-                            onClick={() => markAsRead(alert.id)}
+                            onClick={() => {
+                              markAsRead(alert.id)
+                              updateAlert(alert.id, { lastTriggeredAt: null })
+                            }}
                             className="text-xs bg-gray-800 hover:bg-gray-700 text-white px-3 py-1.5 rounded-lg transition-colors"
                           >
                             Mark Read
@@ -86,13 +100,13 @@ export function AlertPanel() {
                       <div key={alert.id} className="bg-gray-800/50 border border-gray-700 rounded-xl p-4 flex items-center justify-between group hover:border-gray-600 transition-colors">
                         <div>
                           <div className="font-semibold text-white text-sm mb-0.5">{alert.assetPair}</div>
-                          <div className="text-xs text-gray-400">
-                            {alert.condition === 'above' ? '↑ Above' : '↓ Below'} <span className="font-mono">${formatPrice(alert.targetPrice)}</span>
+                          <div className="text-xs text-gray-400 font-mono">
+                            {getConditionText(alert.upperThreshold, alert.lowerThreshold)}
                           </div>
                         </div>
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
-                            onClick={() => toggleAlert(alert.id)}
+                            onClick={() => toggleAlert(alert.id, alert.active)}
                             className="p-1.5 text-gray-400 hover:text-cyan-400 transition-colors"
                             title="Pause alert"
                           >
@@ -124,13 +138,13 @@ export function AlertPanel() {
                       <div key={alert.id} className="bg-gray-800/30 border border-gray-800 rounded-xl p-4 flex items-center justify-between">
                         <div>
                           <div className="font-semibold text-gray-300 text-sm mb-0.5">{alert.assetPair}</div>
-                          <div className="text-xs text-gray-500">
-                            {alert.condition === 'above' ? '↑ Above' : '↓ Below'} <span className="font-mono">${formatPrice(alert.targetPrice)}</span>
+                          <div className="text-xs text-gray-500 font-mono">
+                            {getConditionText(alert.upperThreshold, alert.lowerThreshold)}
                           </div>
                         </div>
                         <div className="flex items-center gap-1">
                           <button
-                            onClick={() => toggleAlert(alert.id)}
+                            onClick={() => toggleAlert(alert.id, alert.active)}
                             className="p-1.5 text-gray-400 hover:text-cyan-400 transition-colors"
                             title="Resume alert"
                           >

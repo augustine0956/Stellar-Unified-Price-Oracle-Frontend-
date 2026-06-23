@@ -26,10 +26,15 @@ export async function fetchPrice(pair: string): Promise<PriceData> {
 export async function fetchPriceHistory(
   pair: string,
   limit = 100,
-  offset = 0
+  offset = 0,
+  startTs?: number,
+  endTs?: number,
 ): Promise<PriceHistoryResponse> {
+  const params = new URLSearchParams({ limit: String(limit), offset: String(offset) })
+  if (startTs !== undefined) params.set('startTs', String(startTs))
+  if (endTs !== undefined) params.set('endTs', String(endTs))
   return request<PriceHistoryResponse>(
-    `/api/prices/${encodeURIComponent(pair)}/history?limit=${limit}&offset=${offset}`
+    `/api/prices/${encodeURIComponent(pair)}/history?${params.toString()}`,
   )
 }
 

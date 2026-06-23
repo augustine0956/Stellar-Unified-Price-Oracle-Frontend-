@@ -11,17 +11,17 @@ import { AlertBadge } from '../components/AlertBadge'
 import { ConnectionBadge } from '../components/ConnectionBadge'
 import { NetworkStatusBanner } from '../components/NetworkStatusBanner'
 import { FilterBar } from '../components/FilterBar'
-import type { AlertFormData } from '../types'
+import type { AlertFormData, LivePriceEntry, PriceData } from '../types'
 
 const ROW_HEIGHT = 200
 const SKELETON_COUNT = 8
 
 function mergePrices(
-  restPrices: { assetPair: string; price: number; timestamp: number; confidence: number; sources: string[] }[],
-  livePrices: Map<string, { assetPair: string; price: number; timestamp: number; confidence: number; sources: string[] }>,
+  restPrices: PriceData[],
+  livePrices: Map<string, LivePriceEntry>,
 ) {
   return restPrices.map((p) => {
-    const live = livePrices.get(p.assetPair)
+    const live = livePrices.get(p.assetPair)?.data
     if (live && live.timestamp >= p.timestamp) {
       return { ...p, ...live }
     }
@@ -172,17 +172,24 @@ export function Dashboard() {
                   }}
                   role="list"
                 >
-                  {rowItems.map((p) => (
-                    <PriceCard
-                      key={p.assetPair}
-                      price={p}
-                      isLive={livePrices.has(p.assetPair)}
-                      isStale={pricesValidating}
-                      hasAlert={hasAlertsForPair(p.assetPair)}
-                      onClick={() => handleCardClick(p.assetPair)}
-                      onAlertClick={(e) => handleAlertClick(e, p.assetPair)}
-                    />
-                  ))}
+                  {rowItems.map((p) => {
+                    const liveEntry = livePrices.get(p.assetPair)
+
+                    return (
+                      <PriceCard
+                        key={p.assetPair}
+                        price={p}
+                        isLive={Boolean(liveEntry)}
+                        isStale={liveEntry?.syncState === 'optimistic'}
+                        syncState={liveEntry?.syncState}
+                        flashVersion={liveEntry?.flashVersion}
+                        isValidating={pricesValidating}
+                        hasAlert={hasAlertsForPair(p.assetPair)}
+                        onClick={() => handleCardClick(p.assetPair)}
+                        onAlertClick={(e) => handleAlertClick(e, p.assetPair)}
+                      />
+                    )
+                  })}
                 </div>
               </div>
             )

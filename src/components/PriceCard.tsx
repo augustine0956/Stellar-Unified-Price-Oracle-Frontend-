@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import type { PriceData } from '../types'
+import type { PriceData, PriceSyncState } from '../types'
 import { formatPrice, timeAgo } from '../utils/format'
 
 const SOURCE_COLORS: Record<string, string> = {
@@ -14,12 +14,35 @@ interface PriceCardProps {
   onClick?: () => void
   isLive?: boolean
   isStale?: boolean
+  syncState?: PriceSyncState
+  flashVersion?: number
+  isValidating?: boolean
   hasAlert?: boolean
   onAlertClick?: (e: React.MouseEvent) => void
 }
 
-export const PriceCard = memo(function PriceCard({ price, onClick, isLive, isStale, hasAlert, onAlertClick }: PriceCardProps) {
+export const PriceCard = memo(function PriceCard({
+  price,
+  onClick,
+  isLive,
+  isStale,
+  syncState,
+  flashVersion = 0,
+  isValidating,
+  hasAlert,
+  onAlertClick,
+}: PriceCardProps) {
   const confidencePct = (price.confidence * 100).toFixed(1)
+  const optimistic = syncState === 'optimistic'
+  const confirmed = syncState === 'confirmed'
+  const rolledBack = syncState === 'rollback'
+  const cardClassName = [
+    'w-full text-left bg-gray-900 border rounded-xl p-5 hover:bg-gray-900/80 transition-all shadow-lg shadow-black/20 cursor-pointer',
+    optimistic ? 'border-amber-500/60 ring-1 ring-amber-500/25' : 'border-gray-800 hover:border-gray-700',
+    confirmed ? 'border-emerald-500/60 ring-1 ring-emerald-500/25' : '',
+    rolledBack ? 'border-rose-500/60 ring-1 ring-rose-500/25' : '',
+    isStale ? 'opacity-80' : '',
+  ].filter(Boolean).join(' ')
 
   return (
     <div
@@ -32,7 +55,7 @@ export const PriceCard = memo(function PriceCard({ price, onClick, isLive, isSta
       }}
       role="button"
       tabIndex={0}
-      className={`w-full text-left bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-gray-700 hover:bg-gray-900/80 transition-all shadow-lg shadow-black/20 cursor-pointer ${isStale ? 'opacity-60' : ''}`}
+      className={cardClassName}
       aria-label={`View details for ${price.assetPair}`}
     >
       <div className="flex items-center justify-between mb-3">
@@ -49,7 +72,12 @@ export const PriceCard = memo(function PriceCard({ price, onClick, isLive, isSta
         </div>
       </div>
 
-      <div className="text-3xl font-bold text-gray-900 dark:text-white mb-3 font-mono tracking-tight">
+      <div
+        key={`${syncState ?? 'rest'}-${flashVersion}`}
+        className={`text-3xl font-bold text-gray-900 dark:text-white mb-3 font-mono tracking-tight transition-colors duration-700 ${
+          confirmed ? 'text-emerald-300' : rolledBack ? 'text-rose-300' : ''
+        }`}
+      >
         ${formatPrice(price.price)}
       </div>
 
@@ -57,6 +85,26 @@ export const PriceCard = memo(function PriceCard({ price, onClick, isLive, isSta
         <span>Updated {timeAgo(price.timestamp)}</span>
         <span className="text-cyan-600 dark:text-cyan-400">{confidencePct}% confidence</span>
       </div>
+
+      {(optimistic || rolledBack || isValidating) && (
+        <div className="flex items-center gap-2 mb-3 text-[11px] font-medium">
+          {optimistic && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-amber-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+              Optimistic update
+            </span>
+          )}
+          {rolledBack && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-rose-500/30 bg-rose-500/10 px-2 py-1 text-rose-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
+              REST corrected
+            </span>
+          )}
+          {isValidating && !optimistic && (
+            <span className="text-gray-500">Revalidating</span>
+          )}
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-1.5">
         {price.sources.map((src) => (

@@ -15,11 +15,17 @@ import { AlertsProvider } from './hooks/useAlerts'
 import { PreferencesProvider } from './preferences/PreferencesContext'
 import { ToastProvider } from './context/ToastContext'
 import { ToastContainer } from './components/ToastContainer'
-import { usePriceContext } from './context/PriceContext'
-import { useObservability } from './observability/hooks/useObservability'
-import { ObservabilityDashboard } from './observability/ui/ObservabilityDashboard'
+import { AnalyticsProvider } from './context/AnalyticsContext'
+import { AnalyticsConsentBanner } from './components/AnalyticsConsentBanner'
+import { AnalyticsCollector } from './utils/analytics'
+import { config } from './config'
 
 const BASENAME = import.meta.env.BASE_URL.replace(/\/$/, '')
+
+// Initialize analytics on module load
+if (config.analyticsEndpoint) {
+  AnalyticsCollector.init(config.analyticsEndpoint)
+}
 
 function AppContent() {
   const location = useLocation()
@@ -96,9 +102,11 @@ export default function App() {
   return (
     <BrowserRouter basename={BASENAME}>
       <ToastProvider>
-        <AppContent />
-        <ToastContainer />
-        <ObservabilityOverlay />
+        <AnalyticsProvider endpoint={config.analyticsEndpoint}>
+          <AppContent />
+          <ToastContainer />
+          <AnalyticsConsentBanner />
+        </AnalyticsProvider>
       </ToastProvider>
     </BrowserRouter>
   )

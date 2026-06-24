@@ -25,7 +25,7 @@ function mergePrices(
   livePrices: Map<string, PriceData>,
 ) {
   return restPrices.map((p) => {
-    const live = livePrices.get(p.assetPair)
+    const live = livePrices.get(p.assetPair)?.data
     if (live && live.timestamp >= p.timestamp) {
       return { ...p, ...live }
     }

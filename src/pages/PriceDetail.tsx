@@ -140,8 +140,18 @@ export function PriceDetail() {
                 {hasAlertsForPair(decodedPair) && (
                   <span className="w-2 h-2 rounded-full bg-amber-400" role="status" aria-label="Active alert" />
                 )}
-                {livePrices.has(decodedPair) && (
+                {liveEntry && (
                   <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                )}
+                {liveEntry?.syncState === 'optimistic' && (
+                  <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-300">
+                    Optimistic update
+                  </span>
+                )}
+                {liveEntry?.syncState === 'rollback' && (
+                  <span className="rounded-full border border-rose-500/30 bg-rose-500/10 px-2 py-0.5 text-[11px] font-medium text-rose-300">
+                    REST corrected
+                  </span>
                 )}
               </div>
               <p className="text-sm text-gray-400 dark:text-gray-500">
@@ -157,7 +167,15 @@ export function PriceDetail() {
             </div>
           </div>
 
-          <div className="text-5xl font-bold text-gray-900 dark:text-white mb-4 font-mono tracking-tight">
+          <div
+            className={`text-5xl font-bold text-gray-900 dark:text-white mb-4 font-mono tracking-tight transition-colors duration-700 ${
+              liveEntry?.syncState === 'confirmed'
+                ? 'text-emerald-300'
+                : liveEntry?.syncState === 'rollback'
+                  ? 'text-rose-300'
+                  : ''
+            }`}
+          >
             ${formatPrice(priceData.price)}
           </div>
 

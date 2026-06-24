@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import { usePriceHistory } from '../hooks/usePriceHistory'
 import { usePriceContext } from '../context/PriceContext'
 import { useAlerts } from '../hooks/useAlerts'
+import { useExport } from '../hooks/useExport'
 import { PriceChart } from '../components/PriceChart'
 import { SourceHealthBadge } from '../components/SourceHealthBadge'
 import { ConnectionBadge } from '../components/ConnectionBadge'
@@ -40,6 +41,7 @@ export function PriceDetail() {
   const { alerts, addAlert, updateAlert, removeAlert, getAlertsForPair, hasAlertsForPair } =
     useAlerts()
 
+  const { exporting, exportHistory } = useExport()
   const [modalOpen, setModalOpen] = useState(false)
   const [editingAlert, setEditingAlert] = useState<Alert | null>(null)
 
@@ -159,6 +161,11 @@ export function PriceDetail() {
               </p>
             </div>
             <div className="flex items-center gap-3">
+              <ExportButton
+                onExport={(fmt) => exportHistory(decodedPair, history, fmt)}
+                exporting={exporting}
+                disabled={history.length === 0}
+              />
               <AlertBadge count={pairAlerts.length} alerts={pairAlerts} onClick={handleOpenModal} />
               <span className="text-sm text-cyan-400">
                 {(priceData.confidence * 100).toFixed(1)}% confidence

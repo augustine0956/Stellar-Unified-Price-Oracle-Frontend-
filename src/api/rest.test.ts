@@ -23,12 +23,9 @@ const mockFetch = vi.fn()
 beforeEach(() => {
   mockFetch.mockReset()
   vi.stubGlobal('fetch', mockFetch)
-  vi.useFakeTimers()
 })
 
 afterEach(() => {
-  vi.runAllTimers()
-  vi.useRealTimers()
   vi.unstubAllGlobals()
 })
 
@@ -65,7 +62,7 @@ describe('fetchAllPrices', () => {
   it('throws HttpRetryError after retrying transient 5xx failures', async () => {
     mockFetch.mockResolvedValue(errorResponse(500, 'Server error'))
     await expect(fetchAllPrices()).rejects.toThrow('HTTP 500 Server error')
-  }, 120_000)
+  }, 30_000)
 })
 
 // ---------------------------------------------------------------------------

@@ -66,7 +66,7 @@ export const PriceCard = memo(function PriceCard({ price, onClick, isLive, isSta
               </svg>
             </button>
           )}
-          <h3 className="text-lg font-semibold text-gray-100">{price.assetPair}</h3>
+          <h2 className="text-lg font-semibold text-gray-100">{price.assetPair}</h2>
         </div>
         <div className="flex items-center gap-2">
           {hasAlert && (

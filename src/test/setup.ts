@@ -1,4 +1,15 @@
 import '@testing-library/jest-dom/vitest'
+import * as matchers from 'vitest-axe/matchers'
+import { expect } from 'vitest'
+import type { AxeMatchers } from 'vitest-axe/matchers'
+
+expect.extend(matchers)
+
+declare module 'vitest' {
+  export interface Assertion<T = any> extends AxeMatchers {}
+  export interface AsymmetricMatchersContaining extends AxeMatchers {}
+}
+
 
 class ResizeObserverMock {
   observe = () => {}

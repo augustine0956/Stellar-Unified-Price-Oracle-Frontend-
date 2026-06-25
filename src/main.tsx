@@ -4,6 +4,9 @@ import { ErrorBoundary } from './components/ErrorBoundary'
 import { PriceProvider } from './context/PriceContext'
 import App from './App'
 import './index.css'
+import { installConsoleAggregator } from './utils/consoleAggregator'
+
+installConsoleAggregator()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

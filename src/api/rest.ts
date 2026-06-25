@@ -1,10 +1,11 @@
 import { config } from '../config'
 import type { PriceData, PriceHistoryResponse } from '../types'
 import { idbCache } from '../hooks/useIndexedDB'
+import { trackedFetch } from '../utils/latencyMonitor'
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const url = `${config.apiUrl}${path}`
-  const res = await fetch(url, {
+  const res = await trackedFetch(url, {
     ...init,
     headers: { 'Content-Type': 'application/json', ...init?.headers },
   })

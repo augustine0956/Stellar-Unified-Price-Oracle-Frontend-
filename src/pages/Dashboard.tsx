@@ -9,6 +9,7 @@ import { PriceTableView } from '../components/PriceTableView'
 import { AlertModal } from '../components/AlertModal'
 import { AlertBadge } from '../components/AlertBadge'
 import { ConnectionBadge } from '../components/ConnectionBadge'
+import { NotificationChannelsModal } from '../components/NotificationChannelsModal'
 import { sanitizeSearchInput } from '../utils/sanitize'
 import type { AlertFormData, LivePriceEntry, PriceData } from '../types'
 
@@ -37,6 +38,7 @@ export function Dashboard() {
   const [modalOpen, setModalOpen] = useState(false)
   const [modalPair, setModalPair] = useState('')
   const [dashboardView, setDashboardView] = useState<'card' | 'table'>('card')
+  const [notifModalOpen, setNotifModalOpen] = useState(false)
 
   const [selectMode, setSelectMode] = useState(false)
   const [selected, setSelected] = useState<Set<string>>(new Set())
@@ -180,6 +182,18 @@ export function Dashboard() {
             </div>
           )}
           <AlertBadge count={activeCount} alerts={alerts} />
+          <button
+            type="button"
+            onClick={() => setNotifModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border border-gray-700 text-gray-400 hover:text-gray-200 hover:border-gray-600 transition-colors"
+            aria-label="Configure notification channels"
+            title="Notification channels"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            Alerts
+          </button>
           <ConnectionBadge status={wsStatus} />
         </div>
       </div>
@@ -299,6 +313,8 @@ export function Dashboard() {
             : undefined
         }
       />
+
+      <NotificationChannelsModal isOpen={notifModalOpen} onClose={() => setNotifModalOpen(false)} />
     </div>
   )
 }

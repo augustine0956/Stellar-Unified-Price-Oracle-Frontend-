@@ -17,7 +17,7 @@ const SKELETON_COUNT = 8
 function mergePrices(
   restPrices: PriceData[],
   livePrices: Map<string, LivePriceEntry>,
-) {
+): PriceData[] {
   return restPrices.map((p) => {
     const live = livePrices.get(p.assetPair)
     if (live && live.data.timestamp >= p.timestamp) {
